@@ -33,7 +33,7 @@
 # 4. make -j
 
 cmake_minimum_required(VERSION 3.5.1)
-
+add_definitions("-DGFLAGS_NAMESPACE=gflags")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 include(ReadVersion)
 get_rocksdb_version(rocksdb_VERSION)
@@ -795,6 +795,7 @@ else()
     port/port_posix.cc
     env/env_posix.cc
     env/fs_posix.cc
+    env/part_wal_io.cc
     env/io_posix.cc)
 endif()
 

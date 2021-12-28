@@ -22,6 +22,7 @@
 #include "table/block_based/block_based_table_factory.h"
 #include "test_util/sync_point.h"
 #include "util/rate_limiter.h"
+#include "env/part_wal_io.h"
 
 namespace ROCKSDB_NAMESPACE {
 Options SanitizeOptions(const std::string& dbname, const Options& src) {
@@ -1332,6 +1333,7 @@ Status DBImpl::CreateWAL(uint64_t log_file_num, uint64_t recycle_log_number,
       BuildDBOptions(immutable_db_options_, mutable_db_options_);
   FileOptions opt_file_options =
       fs_->OptimizeForLogWrite(file_options_, db_options);
+  opt_file_options.use_direct_writes = true;
   std::string log_fname =
       LogFileName(immutable_db_options_.wal_dir, log_file_num);
 
@@ -1346,7 +1348,8 @@ Status DBImpl::CreateWAL(uint64_t log_file_num, uint64_t recycle_log_number,
     s = fs_->ReuseWritableFile(log_fname, old_log_fname, opt_file_options,
                                &lfile, /*dbg=*/nullptr);
   } else {
-    s = NewWritableFile(fs_.get(), log_fname, &lfile, opt_file_options);
+    //s = NewWritableFile(fs_.get(), log_fname, &lfile, opt_file_options);
+    s = NewPartWALWritableFile(fs_.get(), log_fname, &lfile, opt_file_options);
   }
 
   if (s.ok()) {

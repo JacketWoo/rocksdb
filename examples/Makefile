@@ -9,7 +9,7 @@ ifndef DISABLE_JEMALLOC
 endif
 
 ifneq ($(USE_RTTI), 1)
-	CXXFLAGS += -fno-rtti
+	CXXFLAGS += -fno-rtti -g
 endif
 
 .PHONY: clean librocksdb
@@ -17,6 +17,9 @@ endif
 all: simple_example column_families_example compact_files_example c_simple_example optimistic_transaction_example transaction_example compaction_filter_example options_file_example
 
 simple_example: librocksdb simple_example.cc
+	$(CXX) $(CXXFLAGS) $@.cc -o$@ ../librocksdb.a -I../include -O2 -std=c++11 $(PLATFORM_LDFLAGS) $(PLATFORM_CXXFLAGS) $(EXEC_LDFLAGS)
+
+my_simple_example: librocksdb my_simple_example.cc
 	$(CXX) $(CXXFLAGS) $@.cc -o$@ ../librocksdb.a -I../include -O2 -std=c++11 $(PLATFORM_LDFLAGS) $(PLATFORM_CXXFLAGS) $(EXEC_LDFLAGS)
 
 column_families_example: librocksdb column_families_example.cc

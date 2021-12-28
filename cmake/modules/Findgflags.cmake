@@ -9,7 +9,7 @@ find_path(GFLAGS_INCLUDE_DIR
   NAMES gflags/gflags.h)
 
 find_library(GFLAGS_LIBRARIES
-  NAMES gflags)
+	NAMES libgflags.a HINTS /disk2/wxf/gflags/build/lib)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(gflags
