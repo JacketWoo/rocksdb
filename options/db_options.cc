@@ -260,7 +260,7 @@ MutableDBOptions::MutableDBOptions()
       base_background_compactions(-1),
       max_background_compactions(-1),
       avoid_flush_during_shutdown(false),
-      writable_file_max_buffer_size(1024 * 1024),
+      writable_file_max_buffer_size(1024 * 1024 * 10),
       delayed_write_rate(2 * 1024U * 1024U),
       max_total_wal_size(0),
       delete_obsolete_files_period_micros(6ULL * 60 * 60 * 1000000),

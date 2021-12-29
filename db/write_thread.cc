@@ -417,9 +417,9 @@ size_t WriteThread::EnterAsBatchGroupLeader(Writer* leader,
   // down the small write too much.
   size_t max_size = max_write_batch_group_size_bytes;
   const uint64_t min_batch_size_bytes = max_write_batch_group_size_bytes / 8;
-  if (size <= min_batch_size_bytes) {
-    max_size = size + min_batch_size_bytes;
-  }
+  //if (size <= min_batch_size_bytes) {
+  //  max_size = size + min_batch_size_bytes;
+  //}
 
   leader->write_group = write_group;
   write_group->leader = leader;

@@ -1161,6 +1161,7 @@ IOStatus PosixWritableFile::Append(const Slice& data, const IOOptions& /*opts*/,
 IOStatus PosixWritableFile::PositionedAppend(const Slice& data, uint64_t offset,
                                              const IOOptions& /*opts*/,
                                              IODebugContext* /*dbg*/) {
+  //fprintf(stderr, "PosixWritableFile::PositionedAppend IO size: %lu\n", data.size());
   if (use_direct_io()) {
     assert(IsSectorAligned(offset, GetRequiredBufferAlignment()));
     assert(IsSectorAligned(data.size(), GetRequiredBufferAlignment()));

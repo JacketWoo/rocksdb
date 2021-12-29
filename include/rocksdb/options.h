@@ -805,7 +805,7 @@ struct DBOptions {
   // Default: 1024 * 1024 (1 MB)
   //
   // Dynamically changeable through SetDBOptions() API.
-  size_t writable_file_max_buffer_size = 1024 * 1024;
+  size_t writable_file_max_buffer_size = 1024 * 1024 * 10;
 
   // Use adaptive mutex, which spins in the user space before resorting
   // to kernel. This could reduce context switch when the mutex is not
@@ -959,7 +959,7 @@ struct DBOptions {
   // is larger than 1/8 of this limit.
   //
   // Default: 1 MB
-  uint64_t max_write_batch_group_size_bytes = 1 << 20;
+  uint64_t max_write_batch_group_size_bytes = 1 << 24;
 
   // The maximum number of microseconds that a write operation will use
   // a yielding spin loop to coordinate with other write threads before
