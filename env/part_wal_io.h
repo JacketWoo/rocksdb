@@ -25,7 +25,7 @@ struct PartWALWriter {
 
   std::condition_variable m_result_cv;
   std::mutex m_result_mutex;
-  bool finished; 
+  volatile bool finished; 
 
   std::thread m_thr;
 };

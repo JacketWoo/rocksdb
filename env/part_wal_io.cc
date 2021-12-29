@@ -26,10 +26,10 @@ static void PartWALWriterThread(PartWALWriter* writer) {
         break;
       }
     }
-    std::unique_lock<std::mutex> result_lock(writer->m_result_mutex);
+    //std::unique_lock<std::mutex> result_lock(writer->m_result_mutex);
     writer->m_ios = nullptr;
     writer->finished = true;
-    writer->m_result_cv.notify_one();
+    //writer->m_result_cv.notify_one();
   }
 }
 
@@ -77,12 +77,13 @@ IOStatus PartWALWritableFile::PositionedAppend(const Slice &data,
    }
 
    for (uint32_t idx = 0; idx != writers_num; ++idx) {
-     {
-       std::unique_lock<std::mutex> tl(writers[idx].m_result_mutex);
-       while (!writers[idx].finished) {
-         writers[idx].m_result_cv.wait(tl);
-       }
-     }
+     //{
+     //  std::unique_lock<std::mutex> tl(writers[idx].m_result_mutex);
+     //  while (!writers[idx].finished) {
+     //    writers[idx].m_result_cv.wait(tl);
+     //  }
+     //}
+     while (!writers[idx].finished) {}
 
      assert(writers[idx].finished);
      for (auto& io : part_ios[idx]) {
