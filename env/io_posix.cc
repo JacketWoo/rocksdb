@@ -1128,7 +1128,9 @@ PosixWritableFile::PosixWritableFile(const std::string& fname, int fd,
   fallocate_with_keep_size_ = options.fallocate_with_keep_size;
 #endif
 #ifdef ROCKSDB_RANGESYNC_PRESENT
-  sync_file_range_supported_ = IsSyncFileRangeSupported(fd_);
+  if (fd_ != -1) {
+    sync_file_range_supported_ = IsSyncFileRangeSupported(fd_);
+  }
 #endif  // ROCKSDB_RANGESYNC_PRESENT
   assert(!options.use_mmap_writes);
 }
