@@ -9,7 +9,9 @@ extern bool PosixPositionedWrite(
 static void PartWALWriterThread(PartWALWriter* writer) {
   IOOptions options; // Only for call PositionedAppend
   std::vector<PhysicalIO> *ios = nullptr;
-  
+ 
+  char* wbuf_ptr = (char*)malloc(50*1024*1024);
+  char* wbuf = (char *)(((uint64_t)wbuf_ptr + 4*1024ul) & (~(uint64_t)(4*1024ul-1))); 
   while (true) {
     //std::unique_lock<std::mutex> lock(writer->m_mutex);
     //while (!PartWALWriter::exit && !writer->m_ios) {
@@ -21,17 +23,43 @@ static void PartWALWriterThread(PartWALWriter* writer) {
     }
     ios = (std::vector<PhysicalIO> *)writer->m_ios;
     assert(ios != nullptr);
+#if 1
     for (auto& io : *(ios)) {
       io.s = (*io.file)->PositionedAppend(io.data, io.offset, options, nullptr);
       if (io.s != IOStatus::OK()) {
         break;
       }
     }
+#else
+    if (ios->size() > 1) {
+      char* ptr = wbuf;
+      uint32_t psize = 0;
+      for (auto& io : *(ios)) {
+        memcpy(ptr, io.data.data(), io.data.size());
+        ptr += io.data.size();
+        psize += io.data.size();
+      }
+      auto& fio = ios->front();
+      IOStatus s = (*fio.file)->PositionedAppend(Slice(wbuf, psize), fio.offset, options, nullptr);
+      for (auto& io : *(ios)) {
+        io.s = s;
+        if (s != IOStatus::OK()) {
+          break;
+        }
+      }
+    } else {
+      assert(ios->size() == 1);
+      auto& fio = ios->front();
+      fio.s = (*fio.file)->PositionedAppend(fio.data, fio.offset, options, nullptr);
+    }
+#endif
+
     //std::unique_lock<std::mutex> result_lock(writer->m_result_mutex);
     writer->m_ios = nullptr;
     writer->finished = true;
     //writer->m_result_cv.notify_one();
   }
+  free(wbuf_ptr);
 }
 
 std::atomic<bool> PartWALWriter::exit(false);
@@ -71,6 +99,7 @@ IOStatus PartWALWritableFile::PositionedAppend(const Slice &data,
 		                     &(part_files[part_idx]), IOStatus::IOError()}); 
      ptr += part_len;
      left -= part_len;
+     offset += part_len;
    }
    for (uint32_t i = 0; i != writers_num; ++i) {
      uint32_t idx = (start_writer + i) % writers_num;
@@ -118,9 +147,9 @@ IOStatus PartWALWritableFile::PositionedAppend(const Slice &data,
 //  //PartWALWritableFile::writers.resize(PartWALWritableFile::writers_num);
 //}
 
-uint32_t PartWALWritableFile::part_num = 1u;
-uint32_t PartWALWritableFile::part_unit = (1024u*512*1024);
-uint32_t PartWALWritableFile::writers_num = 1u;
+uint32_t PartWALWritableFile::part_num = 4u;
+uint32_t PartWALWritableFile::part_unit = (1024u*128);
+uint32_t PartWALWritableFile::writers_num = 4u;
 std::vector<PartWALWriter> PartWALWritableFile::writers(part_num);
 
 PartWALWritableFile::PartWALWritableFile(const std::string& fname,
