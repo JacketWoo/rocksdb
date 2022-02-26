@@ -1,17 +1,30 @@
 #include "part_wal_io.h"
 
 #include "util/string_util.h"
+#include <strings.h>
 
 namespace ROCKSDB_NAMESPACE {
 
 extern bool PosixPositionedWrite(
   int fd, const char* buf, size_t nbyte, off_t offset);
+
+
+void static set_cpu_affinity() {
+  static volatile int cpu_id = 0;
+  int local_cpu_id = ++cpu_id;
+  cpu_set_t cpu_set;
+  CPU_ZERO(&cpu_set);
+  CPU_SET(local_cpu_id, &cpu_set);
+  pthread_setaffinity_np(pthread_self(), sizeof(cpu_set), &cpu_set);
+}
+
 static void PartWALWriterThread(PartWALWriter* writer) {
+  set_cpu_affinity();
   IOOptions options; // Only for call PositionedAppend
   std::vector<PhysicalIO> *ios = nullptr;
  
   char* wbuf_ptr = (char*)malloc(50*1024*1024);
-  char* wbuf = (char *)(((uint64_t)wbuf_ptr + 4*1024ul) & (~(uint64_t)(4*1024ul-1))); 
+  //char* wbuf = (char *)(((uint64_t)wbuf_ptr + 4*1024ul) & (~(uint64_t)(4*1024ul-1))); 
   while (true) {
     //std::unique_lock<std::mutex> lock(writer->m_mutex);
     //while (!PartWALWriter::exit && !writer->m_ios) {
@@ -71,7 +84,13 @@ PartWALWriter::PartWALWriter() :
   m_result_mutex(),
   finished(true),
   m_thr(PartWALWriterThread, this) {}
-  
+ 
+PartWALWriter::~PartWALWriter() {
+  if (!PartWALWriter::exit.load()) {
+    PartWALWriter::exit.store(true);
+  }
+  m_thr.join();
+} 
 
 IOStatus PartWALWritableFile::PositionedAppend(const Slice &data,
                                                uint64_t offset,

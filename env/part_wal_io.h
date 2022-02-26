@@ -19,6 +19,7 @@ struct PhysicalIO {
 struct PartWALWriter {
   static std::atomic<bool> exit;
   PartWALWriter();
+  virtual ~PartWALWriter();
   volatile std::vector<PhysicalIO>* m_ios;
   std::condition_variable m_cv;
   std::mutex m_mutex;
